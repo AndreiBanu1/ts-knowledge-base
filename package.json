@@ -1,0 +1,18 @@
+{
+  "name": "typescript-knowledge",
+  "version": "1.0.0",
+  "description": "Personal TypeScript learning monorepo: Total TypeScript book exercises and standalone worked-example modules",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:ui": "vitest --ui",
+    "test:types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@vitest/ui": "^4.1.5",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.5"
+  }
+}
