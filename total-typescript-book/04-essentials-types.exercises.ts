@@ -99,6 +99,7 @@ const goToLocation = (coordinates: [latitude: number, longitude: number, elevati
 };
 
 type User = {
+    id?: string;
     name: string;
     age: number;
 };
@@ -155,3 +156,37 @@ export const concatName = (first: string, last?: string) => {
 
     return `${first} ${last}`;
 }
+
+const modifyUser = (user: User[], id: string, makeChange: (user: User) => User) => {
+    return user.map((u) => {
+        if (u.id === id) {
+            return makeChange(u);
+        }
+
+        return u;
+    });
+};
+const users: User[] = [
+    {id: "1", name: "John", age: 22},
+    {id: "2", name: "Jane", age: 42},
+];
+modifyUser(users, "1", (user) => {
+    return { ...user, name: "Waqas" };
+});
+
+const addClickEventListener = (listener: () => void) => {
+    document.addEventListener("click", listener);
+};
+addClickEventListener(() => {
+    console.log("Clicked!");
+});
+
+async function fetchData(): Promise<number> {
+    const response = await fetch("https://api.example.com/data");
+    const data: number = await response.json();
+    return data;
+}
+const example = async () => {
+    const data = await fetchData();
+    type test = Expect<Equal<typeof data, number>>;
+};
