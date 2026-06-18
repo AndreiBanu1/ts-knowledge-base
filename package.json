@@ -1,7 +1,7 @@
 {
-  "name": "typescript-knowledge",
+  "name": "ts-knowledge-base",
   "version": "1.0.0",
-  "description": "Personal TypeScript learning monorepo: Total TypeScript book exercises and standalone worked-example modules",
+  "description": "Personal TypeScript/JavaScript knowledge base: Total TypeScript book exercises, worked-example modules, algorithms, and performance notes",
   "type": "module",
   "private": true,
   "scripts": {
