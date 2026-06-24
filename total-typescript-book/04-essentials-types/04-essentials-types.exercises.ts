@@ -1,4 +1,4 @@
-import type {Expect, Equal} from './helpers'
+import type {Expect, Equal} from '../helpers'
 
 // Exercise 1
 export const add = (a: number, b: number): number => {
@@ -175,7 +175,9 @@ modifyUser(users, "1", (user) => {
 });
 
 const addClickEventListener = (listener: () => void) => {
-    document.addEventListener("click", listener);
+    if (typeof document !== "undefined") {
+        document.addEventListener("click", listener);
+    }
 };
 addClickEventListener(() => {
     console.log("Clicked!");
