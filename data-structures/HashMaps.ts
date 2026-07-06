@@ -43,7 +43,7 @@ class HashMap<K extends string | number, V> {
     // Insert or update key-value pair - O(1) avg
     set(key: K, value: V): void {
         const index = this.hash(key);
-        const bucket = this.buckets[index];
+        const bucket = this.buckets[index]!; // hash() always returns an in-range, pre-filled index
 
         for (const pair of bucket) {
             if (pair[0] === key) {
@@ -58,7 +58,7 @@ class HashMap<K extends string | number, V> {
     // Retrieve value by key - O(1) avg
     get(key: K): V | undefined {
         const index = this.hash(key);
-        const bucket = this.buckets[index];
+        const bucket = this.buckets[index]!; // hash() always returns an in-range, pre-filled index
 
         for (const pair of bucket) {
             if (pair[0] === key) {
@@ -71,10 +71,10 @@ class HashMap<K extends string | number, V> {
     // Delete key - O(1) avg
     delete(key: K): boolean {
         const index = this.hash(key);
-        const bucket = this.buckets[index];
+        const bucket = this.buckets[index]!; // hash() always returns an in-range, pre-filled index
 
         for (let i = 0; i < bucket.length; i++) {
-            if (bucket[i][0] === key) {
+            if (bucket[i]![0] === key) {
                 bucket.splice(i, 1);
                 return true;
             }

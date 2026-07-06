@@ -8,12 +8,13 @@ one toolchain.
 
 | Folder / file | What's inside |
 |---|---|
-| [`total-typescript-book/`](total-typescript-book) | Exercises from the *Total TypeScript* book (Matt Pocock & Taylor Bell). Logic lives in `*.exercises.ts`, Vitest tests in `*.spec.ts`. |
+| [`algorithms/`](algorithms) | DSA practice, grouped by pattern: `two-pointers/`, `greedy/`, `strings/`, `hashmaps/`, and `notes/big-o.ts`. |
+| [`data-structures/`](data-structures) | Notes and implementations — arrays, linked lists, stacks, queues, trees, graphs, hash maps. |
+| [`design-patterns/`](design-patterns) | Design pattern examples (e.g. Singleton). |
+| [`typescript-book/`](typescript-book) | Exercises from the *Total TypeScript* book (Matt Pocock & Taylor Bell). Logic lives in `*.exercises.ts`, Vitest tests in `*.spec.ts`. |
+| [`performance/`](performance) | Numbered `bad.js` / `good.js` pairs with `explanation.txt` notes on JS perf patterns. |
 | [`checkout-module/`](checkout-module) | A worked example of extracting an internal helper into its own testable module. See its [README](checkout-module/README.md). |
-| [`Algorithms/`](Algorithms) | DSA practice — Two Pointers, Greedy, Big-O notes, and assorted problems. |
-| [`js_performance_optimizations/`](js_performance_optimizations) | Numbered `bad.js` / `good.js` pairs with `explanation.txt` notes on JS perf patterns. |
-| [`common-js-patterns.ts`](common-js-patterns.ts) | Scratch file of common JavaScript patterns. |
-| [`exercise.ts`](exercise.ts) | Misc. TypeScript scratch exercises. |
+| [`scratch/`](scratch) | Loose practice & scratch files — common JS patterns, misc. exercises, a JSON parser, and a two-pointers review sheet. |
 
 ## Toolchain
 
@@ -42,7 +43,7 @@ npm run test:run -- checkout-module
 
 ## Notes
 
-- `Algorithms/` and `js_performance_optimizations/` are excluded from the root
-  `tsconfig.json` / Vitest config — they're standalone study material, not part
-  of the typed/tested surface.
+- `algorithms/`, `performance/`, `scratch/`, and `design-patterns/` are excluded
+  from the root `tsconfig.json` / Vitest config — they're standalone study
+  material, not part of the typed/tested surface.
 - This is a learning repo: expect scratch files and works-in-progress.

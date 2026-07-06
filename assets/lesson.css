@@ -1,0 +1,153 @@
+/* Shared stylesheet for all lessons. Tufte-inspired: quiet, readable, print-friendly. */
+
+:root {
+  --ink: #1a1a1a;
+  --paper: #fffef9;
+  --muted: #6b6b6b;
+  --rule: #e6e2d3;
+  --accent: #7a1f1f;      /* deep red, for emphasis + links */
+  --code-bg: #f4f1e8;
+  --good: #2f6b34;
+  --warn: #9a6a00;
+  --maxw: 42rem;
+}
+
+* { box-sizing: border-box; }
+
+html { font-size: 18px; }
+
+body {
+  margin: 0 auto;
+  max-width: var(--maxw);
+  padding: 3rem 1.25rem 6rem;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.kicker {
+  font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 600;
+  margin: 0 0 0.4rem;
+}
+
+h1 { font-size: 2rem; line-height: 1.15; margin: 0 0 0.5rem; font-weight: 700; }
+h2 {
+  font-size: 1.3rem; margin: 2.6rem 0 0.6rem; font-weight: 700;
+  padding-bottom: 0.25rem; border-bottom: 1px solid var(--rule);
+}
+h3 { font-size: 1.05rem; margin: 1.6rem 0 0.4rem; font-weight: 700; }
+
+p, li { font-size: 1rem; }
+.lead { font-size: 1.12rem; color: #333; }
+.muted { color: var(--muted); }
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid rgba(122,31,31,0.3); }
+a:hover { border-bottom-color: var(--accent); }
+
+code {
+  font-family: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+  background: var(--code-bg);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+}
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent);
+  border-radius: 4px;
+  padding: 1rem 1.1rem;
+  overflow-x: auto;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+pre code { background: none; padding: 0; font-size: inherit; }
+
+/* Callout boxes */
+.box {
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 1rem 1.2rem;
+  margin: 1.4rem 0;
+  background: #fff;
+}
+.box.tip    { border-left: 4px solid var(--good); }
+.box.watch  { border-left: 4px solid var(--warn); }
+.box.big    { border-left: 4px solid var(--accent); background: #fbf7f7; }
+.box .box-title {
+  font-family: -apple-system, system-ui, sans-serif;
+  font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase;
+  font-weight: 700; color: var(--muted); margin-bottom: 0.4rem;
+}
+
+/* The method steps */
+ol.method { counter-reset: step; list-style: none; padding-left: 0; }
+ol.method > li {
+  counter-increment: step;
+  position: relative;
+  padding: 0.6rem 0 0.6rem 3rem;
+  border-top: 1px solid var(--rule);
+}
+ol.method > li::before {
+  content: counter(step);
+  position: absolute; left: 0; top: 0.55rem;
+  width: 2rem; height: 2rem;
+  background: var(--accent); color: #fff;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: -apple-system, system-ui, sans-serif;
+  font-weight: 700; font-size: 0.95rem;
+}
+ol.method > li strong { display: block; font-size: 1.02rem; }
+
+/* Quiz / reveal widget */
+.reveal { margin: 1rem 0; }
+.reveal summary {
+  cursor: pointer;
+  font-family: -apple-system, system-ui, sans-serif;
+  font-size: 0.9rem; font-weight: 600;
+  color: var(--accent);
+  padding: 0.5rem 0.8rem;
+  background: #fbf7f7;
+  border: 1px dashed rgba(122,31,31,0.4);
+  border-radius: 5px;
+  list-style: none;
+}
+.reveal summary::-webkit-details-marker { display: none; }
+.reveal summary::before { content: "▸ "; }
+.reveal[open] summary::before { content: "▾ "; }
+.reveal[open] summary { border-style: solid; margin-bottom: 0.5rem; }
+.reveal .answer { padding: 0 0.3rem; }
+
+/* Footer nav */
+.lesson-footer {
+  margin-top: 4rem; padding-top: 1.2rem;
+  border-top: 2px solid var(--rule);
+  font-family: -apple-system, system-ui, sans-serif;
+  font-size: 0.85rem;
+}
+.ask {
+  font-family: -apple-system, system-ui, sans-serif;
+  font-size: 0.9rem;
+  background: #fbf7f7;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 0.9rem 1.1rem;
+  margin-top: 2rem;
+}
+
+hr { border: none; border-top: 1px solid var(--rule); margin: 2rem 0; }
+
+@media print {
+  body { max-width: none; padding: 0; font-size: 11pt; }
+  .reveal[open] summary, .reveal summary { border: none; background: none; color: var(--ink); }
+  .reveal { display: none; } /* answers hidden in print — quiz yourself */
+  a { color: var(--ink); border: none; }
+}

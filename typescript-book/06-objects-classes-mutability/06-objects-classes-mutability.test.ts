@@ -107,6 +107,7 @@ describe('Test suite for chapter 06-object-classes-mutability', () => {
                         title: string;
                         artist: string;
                         releaseYear: number;
+                        genre?: string;
                     } & {
                         unitsSold: number;
                         revenue: number;
