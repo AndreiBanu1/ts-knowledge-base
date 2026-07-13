@@ -16,7 +16,7 @@
 // we keep track of the chars we read and the count number
 
 // #4: Code
-function reverseRLE(str: string) {
+function reverseRLE(str: string): string {
   if (str.length === 0) return ''
 
   let result = ''

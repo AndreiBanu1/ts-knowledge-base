@@ -15,26 +15,26 @@ Output: false
  */
 
 function isAnagram(s: string, t: string): boolean {
-  if (s.length != t.length) return false
+  if (s.length !== t.length) return false
 
-  let countMapS = new Map<string, number>()
+  let mapS = new Map<string, number>()
   for (let i = 0; i < s.length; i++) {
-    const count = countMapS.get(s[i]) ?? 0
-    countMapS.set(s[i], count + 1)
+    const count = mapS.get(s[i]) ?? 0
+    mapS.set(s[i], count + 1)
   }
 
-  let countMapT = new Map<string, number>()
+  let mapT = new Map<string, number>()
   for (let i = 0; i < t.length; i++) {
-    const count = countMapT.get(t[i]) ?? 0
-    countMapT.set(t[i], count + 1)
+    const count = mapT.get(t[i]) ?? 0
+    mapT.set(t[i], count + 1)
   }
 
-  for (const [char, countInS] of countMapS) {
-    if (countMapT.get(char) !== countInS) return false
+  for (const [k, v] of mapS) {
+    if (mapT.get(k) !== v) return false
   }
   return true
 }
 
-isAnagram("racecar", "carrace");
-isAnagram("jar", "jam");
-isAnagram("aab","abb");
+console.log(isAnagram("racecar", "carrace"));
+console.log(isAnagram("jar", "jam"));
+console.log(isAnagram("aab","abb"));

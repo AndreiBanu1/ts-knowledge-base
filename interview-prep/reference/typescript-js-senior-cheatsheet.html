@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Senior QA — TypeScript / JS Fundamentals Cheat Sheet</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+<style>
+  body { max-width: 52rem; }
+  h2 { margin-top: 2rem; }
+  h3 { margin-top: 1.2rem; color: var(--accent); }
+  pre { font-size: 0.78rem; margin: 0.5rem 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.4rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 0.6rem 0; }
+  th, td { text-align: left; padding: 0.35rem 0.5rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { font-family: -apple-system, system-ui, sans-serif; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+  .pill { font-family: -apple-system, system-ui, sans-serif; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); }
+  @media print { body { max-width: none; } .grid2 { grid-template-columns: 1fr 1fr; } pre { font-size: 7.5pt; } }
+</style>
+</head>
+<body>
+
+<p class="kicker">Interview Prep · Reference · Tomorrow PM</p>
+<h1>TypeScript / JS Fundamentals — Senior QA Cheat Sheet</h1>
+<p class="lead">
+  The language questions that show up in QA interviews: scoping, hoisting, closures, async,
+  value-vs-reference, collections, OOP, and the two design patterns you'll be asked about
+  (Singleton, Factory) — each tied to <em>where it lives in a test framework</em>.
+</p>
+
+<div class="box big">
+  <div class="box-title">The mental model that ties it together</div>
+  JS is <strong>single-threaded with an event loop</strong>. Objects/arrays are handled
+  <strong>by reference</strong>, primitives by value. <code>async/await</code> is just sugar over Promises.
+  Almost every "gotcha" question is one of these three ideas in disguise.
+</div>
+
+<!-- ============================================================= -->
+<h2>1 · var / let / const &amp; hoisting</h2>
+<table>
+  <tr><th></th><th>Scope</th><th>Hoisted?</th><th>Reassign?</th></tr>
+  <tr><td><code>var</code></td><td>function</td><td>Yes → <code>undefined</code></td><td>Yes</td></tr>
+  <tr><td><code>let</code></td><td>block <code>{ }</code></td><td>Yes, but TDZ*</td><td>Yes</td></tr>
+  <tr><td><code>const</code></td><td>block <code>{ }</code></td><td>Yes, but TDZ*</td><td>No (binding)</td></tr>
+</table>
+<p class="muted">*TDZ = Temporal Dead Zone: the variable exists but touching it before its declaration throws <code>ReferenceError</code>.</p>
+
+<div class="grid2">
+<pre><code>// Hoisting: declarations move up, assignments don't
+console.log(a); // undefined  (var hoisted)
+var a = 1;
+
+console.log(b); // ReferenceError (TDZ)
+let b = 2;
+
+// function declarations are fully hoisted
+foo();          // works
+function foo() {}
+// function EXPRESSIONS are not
+bar();          // TypeError
+const bar = () =&gt; {};</code></pre>
+
+<pre><code>// const ≠ immutable — only the BINDING is fixed
+const arr = [1, 2];
+arr.push(3);     // ✅ allowed (contents mutable)
+arr = [];        // ❌ TypeError (rebinding)
+
+// Object.freeze for shallow immutability
+const cfg = Object.freeze({ retries: 2 });
+cfg.retries = 5; // silently ignored (throws in strict)
+
+// Rule: default to const, use let when you must
+// reassign, never use var.</code></pre>
+</div>
+
+<div class="box watch">
+  <div class="box-title">Classic interview trap</div>
+  <pre><code>// var in a loop — all callbacks share ONE i
+for (var i = 0; i &lt; 3; i++) setTimeout(() =&gt; console.log(i)); // 3 3 3
+// let creates a NEW binding each iteration
+for (let i = 0; i &lt; 3; i++) setTimeout(() =&gt; console.log(i)); // 0 1 2</code></pre>
+  This is a <strong>closure + scope</strong> question — see §3.
+</div>
+
+<!-- ============================================================= -->
+<h2>2 · Pass by value vs by reference</h2>
+<div class="box big">
+  <div class="box-title">The rule</div>
+  <strong>Primitives</strong> (number, string, boolean, null, undefined, symbol, bigint) are copied
+  <strong>by value</strong>. <strong>Objects, arrays, functions</strong> are copied <strong>by reference</strong>
+  (the reference itself is passed by value — you copy the "address", not the box).
+</div>
+<div class="grid2">
+<pre><code>// Primitive — copy
+let a = 1; let b = a; b++;
+// a=1, b=2 (independent)
+
+// Object — same box
+const o1 = { n: 1 };
+const o2 = o1;
+o2.n = 99;        // o1.n is now 99 too!
+
+function mutate(o) { o.n = 0; }
+mutate(o1);       // o1.n === 0 (caller affected)</code></pre>
+
+<pre><code>// Why it matters in tests: shared test data leaks
+const baseUser = { role: 'admin' };
+function makeUser(over) {
+  return { ...baseUser, ...over }; // shallow copy!
+}
+// Deep structures need a deep clone:
+const copy = structuredClone(baseUser);
+
+// === on objects compares REFERENCES, not contents
+{a:1} === {a:1}   // false
+[1] === [1]       // false</code></pre>
+</div>
+
+<!-- ============================================================= -->
+<h2>3 · Closures</h2>
+<p>A <strong>closure</strong> = a function that remembers the variables from the scope where it was
+  <em>defined</em>, even after that scope has returned. It's how JS does private state.</p>
+<div class="grid2">
+<pre><code>function counter() {
+  let count = 0;              // "private"
+  return () =&gt; ++count;      // closes over count
+}
+const next = counter();
+next(); // 1
+next(); // 2  — count persists, but is inaccessible
+</code></pre>
+<pre><code>// In test frameworks: factory that captures config
+function apiClient(baseURL) {
+  return {
+    get: (path) =&gt; fetch(baseURL + path),
+  };
+} // baseURL is "remembered" — no need to repass it
+const api = apiClient('https://app.test');</code></pre>
+</div>
+<div class="box tip"><div class="box-title">Where it shows up in automation</div>
+  Custom fixtures, retry wrappers, and "builder" test-data helpers all rely on closures to
+  capture state (a token, a base URL, a page) without exposing it globally.</div>
+
+<!-- ============================================================= -->
+<h2>4 · Promises, async/await, the event loop</h2>
+<div class="grid2">
+<pre><code>// A Promise: pending → fulfilled | rejected
+const p = new Promise((resolve, reject) =&gt; {
+  ok ? resolve(value) : reject(err);
+});
+
+// Consume with .then/.catch OR async/await
+p.then(v =&gt; ...).catch(e =&gt; ...).finally(...);
+
+async function run() {
+  try {
+    const v = await p;      // unwraps the promise
+  } catch (e) { /* handles reject */ }
+}</code></pre>
+
+<pre><code>// Run in parallel vs series — big perf point
+// SERIES (slow): each awaits the previous
+const a = await f(); const b = await g();
+
+// PARALLEL (fast): start both, then await
+const [a2, b2] = await Promise.all([f(), g()]);
+
+// Promise combinators
+Promise.all([...])        // all succeed, or reject fast
+Promise.allSettled([...]) // wait all, never rejects
+Promise.race([...])       // first to settle
+Promise.any([...])        // first to FULFILL</code></pre>
+</div>
+<div class="box watch"><div class="box-title">Traps interviewers love</div>
+  <pre><code>// 1. Forgetting await → test passes before assert runs (flaky!)
+expect(page.getByText('x')).toBeVisible();       // ❌ missing await
+await expect(page.getByText('x')).toBeVisible(); // ✅
+
+// 2. await in a loop = serial. Map to promises + Promise.all for parallel.
+for (const id of ids) await del(id);             // slow, serial
+await Promise.all(ids.map(id =&gt; del(id)));       // parallel
+
+// 3. Microtasks (promises) run before macrotasks (setTimeout)
+console.log(1);
+setTimeout(() =&gt; console.log(4));
+Promise.resolve().then(() =&gt; console.log(3));
+console.log(2);            // prints 1 2 3 4</code></pre></div>
+
+<!-- ============================================================= -->
+<h2>5 · Arrays, Objects, Map, Set</h2>
+<div class="grid2">
+<pre><code>// Array workhorses (know these cold)
+arr.map(x =&gt; x * 2)          // transform
+arr.filter(x =&gt; x &gt; 0)       // subset
+arr.reduce((a, x) =&gt; a + x, 0) // fold to one value
+arr.find(x =&gt; x.id === 3)    // first match | undefined
+arr.some(...) / arr.every(...) // boolean tests
+arr.includes(2)             // membership
+arr.sort((a,b) =&gt; a - b)     // MUTATES; numeric compare
+[...new Set(arr)]           // dedupe
+arr.flat() / arr.flatMap()</code></pre>
+
+<pre><code>// Object basics
+Object.keys(o) / .values(o) / .entries(o)
+const { a, b } = o;         // destructure
+const merged = { ...o1, ...o2 }; // shallow merge
+const { a, ...rest } = o;   // omit a
+
+// Spread/rest
+const copy = [...arr];      // shallow array copy
+function f(...args) {}       // gather args</code></pre>
+</div>
+
+<table>
+  <tr><th></th><th>Object</th><th>Map</th><th>Set</th></tr>
+  <tr><td>Keys</td><td>string/symbol only</td><td><em>any</em> type</td><td>values, unique</td></tr>
+  <tr><td>Order</td><td>mostly insertion</td><td>insertion guaranteed</td><td>insertion</td></tr>
+  <tr><td>Size</td><td><code>Object.keys().length</code></td><td><code>.size</code></td><td><code>.size</code></td></tr>
+  <tr><td>Use for</td><td>fixed-shape records</td><td>dynamic key/value, lookups</td><td>uniqueness, membership</td></tr>
+</table>
+<div class="grid2">
+<pre><code>const m = new Map();
+m.set('a', 1); m.get('a'); m.has('a'); m.delete('a');
+for (const [k, v] of m) {}   // iterable
+m.size;</code></pre>
+<pre><code>const s = new Set([1, 1, 2]); // {1, 2}
+s.add(3); s.has(2); s.delete(1);
+s.size;
+// dedupe an array in one line
+const unique = [...new Set(list)];</code></pre>
+</div>
+
+<!-- ============================================================= -->
+<h2>6 · OOP concepts (and where they live in a framework)</h2>
+<table>
+  <tr><th>Concept</th><th>Meaning</th><th>In a test framework</th></tr>
+  <tr><td><strong>Encapsulation</strong></td><td>Bundle data + behaviour, hide internals</td><td>Page Object hides selectors; exposes <code>login()</code></td></tr>
+  <tr><td><strong>Inheritance</strong></td><td>Subclass reuses/extends a base</td><td><code>BasePage</code> → <code>LoginPage extends BasePage</code> (shared <code>goto</code>, header)</td></tr>
+  <tr><td><strong>Polymorphism</strong></td><td>Same method, different behaviour per type</td><td>Different page objects implement a common <code>open()</code>; tests don't care which</td></tr>
+  <tr><td><strong>Abstraction</strong></td><td>Expose <em>what</em>, hide <em>how</em></td><td>Test calls <code>checkout.pay()</code>; ignores the DOM steps inside</td></tr>
+</table>
+<pre><code>class BasePage {
+  constructor(protected page: Page) {}      // access modifiers: public/private/protected
+  async goto(path: string) { await this.page.goto(path); }
+}
+class LoginPage extends BasePage {           // inheritance
+  private get email() { return this.page.getByLabel('Email'); }  // encapsulation
+  async login(e: string, p: string) {        // abstraction: intent, not DOM
+    await this.email.fill(e); /* ... */
+  }
+}</code></pre>
+
+<!-- ============================================================= -->
+<h2>7 · Design patterns — Singleton &amp; Factory</h2>
+<div class="grid2">
+<pre><code>// SINGLETON — one shared instance app-wide.
+// Use for: a single API client, DB connection,
+// config, or logger shared across tests.
+class ApiClient {
+  private static instance: ApiClient;
+  private constructor(public baseURL: string) {}
+  static get(url = 'https://app.test') {
+    if (!ApiClient.instance)
+      ApiClient.instance = new ApiClient(url);
+    return ApiClient.instance;
+  }
+}
+const a = ApiClient.get();
+const b = ApiClient.get(); // a === b (same instance)</code></pre>
+
+<pre><code>// FACTORY — a function/class that decides WHICH
+// object to build. Use for: test-data builders,
+// picking a page object by name, browser setup.
+type Role = 'admin' | 'guest';
+function makeUser(role: Role) {
+  const base = { name: 'Test', createdAt: 0 };
+  switch (role) {
+    case 'admin': return { ...base, perms: ['*'] };
+    case 'guest': return { ...base, perms: [] };
+  }
+}
+const admin = makeUser('admin');
+// Factory centralises creation → change shape once.</code></pre>
+</div>
+<div class="box tip"><div class="box-title">Interview soundbites</div>
+  <strong>Singleton:</strong> "One instance, global access point — I'd use it for a shared API client or
+  config so every test hits the same configured object. Downside: it's global state, which can hurt
+  test isolation, so I keep it stateless or immutable."<br><br>
+  <strong>Factory:</strong> "Encapsulates object creation so callers don't hard-code construction. In
+  automation it's my test-data builder — <code>makeUser('admin')</code> — so when the user shape changes I
+  fix one place, not fifty tests."
+</div>
+
+<!-- ============================================================= -->
+<h2>8 · TypeScript-specific (rapid fire)</h2>
+<div class="grid2">
+<pre><code>interface User { id: number; name?: string; } // ? optional
+type Status = 'pass' | 'fail';   // union / literal
+type Result = User | null;        // union
+function f&lt;T&gt;(x: T): T { return x; } // generic
+
+// interface (extendable, for object shapes)
+// vs type (unions, primitives, tuples) — mostly interchangeable
+</code></pre>
+<pre><code>// utility types
+Partial&lt;T&gt; Required&lt;T&gt; Readonly&lt;T&gt;
+Pick&lt;T,K&gt; Omit&lt;T,K&gt; Record&lt;K,V&gt;
+
+unknown  // safe any — must narrow before use
+never    // impossible / exhaustiveness
+as       // type assertion (escape hatch)
+x!       // non-null assertion
+x ?? y   // nullish coalescing (null/undefined only)
+x?.y     // optional chaining</code></pre>
+</div>
+
+<h2 id="src">Primary source</h2>
+<p>
+  <a href="https://www.typescriptlang.org/docs/handbook/intro.html">TypeScript Handbook</a> for types;
+  <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide">MDN JS Guide</a> for closures,
+  the event loop, and value-vs-reference — both are the high-trust primary sources.
+</p>
+
+<div class="ask">
+  <strong>I'm your teacher — ask or drill.</strong> Want the classic "what does this log?" event-loop
+  puzzles, or a rapid-fire round on any section here? Say the word.
+</div>
+
+<div class="lesson-footer">
+  <p class="muted">
+    Companion sheets:
+    <a href="./playwright-ts-senior-cheatsheet.html">Playwright + TS</a> ·
+    <a href="./api-http-db-senior-cheatsheet.html">API / HTTP / DB</a> ·
+    <a href="./testing-theory-senior-cheatsheet.html">Testing Theory</a> ·
+    <a href="../../reference/problem-solving-method.html">UDPCT method</a>
+  </p>
+</div>
+
+</body>
+</html>

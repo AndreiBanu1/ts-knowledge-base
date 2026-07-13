@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Senior QA Automation — Playwright + TS Cheat Sheet</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+<style>
+  /* Denser layout for a reference sheet — override a few lesson defaults */
+  body { max-width: 52rem; }
+  h2 { margin-top: 2rem; }
+  h3 { margin-top: 1.2rem; color: var(--accent); }
+  pre { font-size: 0.78rem; margin: 0.5rem 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.4rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 0.6rem 0; }
+  th, td { text-align: left; padding: 0.35rem 0.5rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { font-family: -apple-system, system-ui, sans-serif; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+  .pill { font-family: -apple-system, system-ui, sans-serif; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); }
+  @media print { body { max-width: none; } .grid2 { grid-template-columns: 1fr 1fr; } pre { font-size: 7.5pt; } }
+</style>
+</head>
+<body>
+
+<p class="kicker">Interview Prep · Reference · Tomorrow PM</p>
+<h1>Playwright + TypeScript — Senior QA Cheat Sheet</h1>
+<p class="lead">
+  Everything high-yield for a Senior QA Automation interview, on one printable sheet. Skim it tonight,
+  keep it open tomorrow. Grouped as: <strong>Locators → Assertions → Waiting → Fixtures/POM →
+  Network → Config/CI → TS-for-QA → Senior talking points</strong>.
+</p>
+
+<div class="box big">
+  <div class="box-title">The one idea that signals "senior"</div>
+  Playwright's whole design is <strong>web-first, auto-waiting assertions on resilient locators</strong>.
+  Juniors add <code>waitForTimeout</code> and use CSS/XPath; seniors use <em>role/label locators</em>,
+  lean on <em>auto-waiting</em>, and never sleep. If you internalise one thing, make it this.
+</div>
+
+<!-- ============================================================= -->
+<h2>1 · Locators — prefer user-facing, avoid brittle</h2>
+<p>A <code>Locator</code> is <em>lazy</em>: it doesn't find the element until you act/assert on it, so it
+  re-queries the DOM every time — that's what makes it resilient to re-renders.</p>
+
+<table>
+  <tr><th>Priority</th><th>Locator</th><th>Use for</th></tr>
+  <tr><td><span class="pill">1</span></td><td><code>getByRole('button', { name: 'Submit' })</code></td><td>Almost everything. Mirrors accessibility tree.</td></tr>
+  <tr><td><span class="pill">2</span></td><td><code>getByLabel('Email')</code></td><td>Form fields (label association).</td></tr>
+  <tr><td><span class="pill">3</span></td><td><code>getByPlaceholder</code> / <code>getByText</code> / <code>getByAltText</code> / <code>getByTitle</code></td><td>When no role/label fits.</td></tr>
+  <tr><td><span class="pill">4</span></td><td><code>getByTestId('cart-total')</code></td><td>Dynamic content, no stable a11y handle.</td></tr>
+  <tr><td><span class="pill">last</span></td><td><code>page.locator('.css')</code> / XPath</td><td>Escape hatch only. Brittle.</td></tr>
+</table>
+
+<div class="grid2">
+<pre><code>// Chaining & filtering (very senior-friendly)
+page.getByRole('listitem')
+    .filter({ hasText: 'Product 2' })
+    .getByRole('button', { name: 'Add' });
+
+// Nth / first / last
+page.getByRole('listitem').first();
+page.getByRole('listitem').nth(2);
+
+// Scope within a parent
+const row = page.getByRole('row', { name: 'Order 5' });
+await row.getByRole('button', { name: 'Cancel' }).click();</code></pre>
+
+<pre><code>// Strictness: locators are STRICT by default —
+// if 2+ match, the action throws. That's a feature.
+
+// Relative / layout locators
+page.getByRole('button').and(page.getByTitle('Sub'));
+page.getByText('Price').locator('..'); // parent (XPath)
+
+// Test-id attribute is configurable in config:
+// use: { testIdAttribute: 'data-qa' }</code></pre>
+</div>
+
+<!-- ============================================================= -->
+<h2>2 · Assertions — web-first (auto-retrying) vs generic</h2>
+<div class="box watch">
+  <div class="box-title">The #1 flakiness fix</div>
+  <strong>Web-first assertions auto-retry</strong> until they pass or time out. <code>await expect(locator).toBeVisible()</code>
+  keeps re-checking. <code>expect(await locator.isVisible()).toBe(true)</code> checks <em>once</em> — flaky. Always
+  <code>await expect(locator)…</code>, never assert on an already-resolved boolean.
+</div>
+
+<div class="grid2">
+<pre><code>// Web-first (retrying) — await the whole expect
+await expect(page.getByText('Welcome')).toBeVisible();
+await expect(locator).toHaveText('Done');
+await expect(locator).toHaveValue('abc');
+await expect(locator).toHaveCount(3);
+await expect(locator).toBeEnabled();
+await expect(locator).toBeChecked();
+await expect(page).toHaveURL(/dashboard/);
+await expect(page).toHaveTitle('Home');
+await expect(locator).toHaveAttribute('href', '/x');</code></pre>
+
+<pre><code>// Generic (NO retry) — value already resolved
+expect(1 + 1).toBe(2);
+expect(arr).toContain('x');
+expect(obj).toEqual({ a: 1 });
+
+// soft — collect failures, don't stop the test
+await expect.soft(loc).toHaveText('a');
+await expect.soft(loc2).toBeVisible();
+
+// custom timeout per assertion
+await expect(loc).toBeVisible({ timeout: 10_000 });</code></pre>
+</div>
+
+<!-- ============================================================= -->
+<h2>3 · Auto-waiting — why you never <code>sleep</code></h2>
+<p>Before every action, Playwright runs <strong>actionability checks</strong>: the element must be
+  <em>attached, visible, stable (not animating), receives events (not obscured), and enabled</em>. It waits
+  for all of these automatically, up to the timeout.</p>
+<div class="grid2">
+<pre><code>// ✅ These already wait — no sleep needed
+await page.getByRole('button').click();
+await page.getByLabel('Email').fill('a@b.com');
+
+// ✅ Wait for a condition/event explicitly
+await page.waitForLoadState('networkidle');
+await page.waitForURL('**/dashboard');
+await expect(locator).toBeVisible(); // preferred</code></pre>
+<pre><code>// ❌ The anti-pattern that flags you as junior
+await page.waitForTimeout(3000); // arbitrary sleep
+
+// Waiting for a response as part of an action:
+const [resp] = await Promise.all([
+  page.waitForResponse('**/api/cart'),
+  page.getByRole('button', { name: 'Add' }).click(),
+]);</code></pre>
+</div>
+
+<!-- ============================================================= -->
+<h2>4 · Fixtures &amp; Page Object Model</h2>
+<p><strong>Fixtures</strong> = Playwright's dependency injection: set up/tear down state per test, on demand,
+  in isolation. <strong>POM</strong> = encapsulate page structure + actions in a class so tests read as intent.</p>
+
+<div class="grid2">
+<pre><code>// Page Object
+export class LoginPage {
+  constructor(private page: Page) {}
+  get email() { return this.page.getByLabel('Email'); }
+  get pw()    { return this.page.getByLabel('Password'); }
+  async goto() { await this.page.goto('/login'); }
+  async login(e: string, p: string) {
+    await this.email.fill(e);
+    await this.pw.fill(p);
+    await this.page.getByRole('button',
+      { name: 'Sign in' }).click();
+  }
+}</code></pre>
+
+<pre><code>// Custom fixture that provides the page object
+import { test as base } from '@playwright/test';
+
+type Fixtures = { loginPage: LoginPage };
+
+export const test = base.extend&lt;Fixtures&gt;({
+  loginPage: async ({ page }, use) => {
+    const lp = new LoginPage(page);
+    await lp.goto();
+    await use(lp);          // test runs here
+    // teardown after use()
+  },
+});
+// test('...', async ({ loginPage }) =&gt; { ... })</code></pre>
+</div>
+<div class="box tip">
+  <div class="box-title">Senior nuance</div>
+  <code>test.beforeEach</code> vs <strong>fixtures</strong>: fixtures compose, run only when a test requests them,
+  and tear down automatically — prefer them for shared setup. Use <code>storageState</code> to log in
+  <em>once</em> and reuse auth across tests (huge speed win) — see Config.
+</div>
+
+<!-- ============================================================= -->
+<h2>5 · Network — mocking, intercepting, API testing</h2>
+<div class="grid2">
+<pre><code>// Mock/stub a response
+await page.route('**/api/users', route =&gt;
+  route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify([{ id: 1, name: 'A' }]),
+  }));
+
+// Block resources (speed, isolation)
+await page.route('**/*.{png,jpg}', r =&gt; r.abort());
+
+// Modify a real response
+await page.route('**/api/x', async route =&gt; {
+  const resp = await route.fetch();
+  const json = await resp.json();
+  json.role = 'admin';
+  await route.fulfill({ response: resp, json });
+});</code></pre>
+
+<pre><code>// Pure API testing via request fixture
+test('api', async ({ request }) =&gt; {
+  const res = await request.post('/api/users', {
+    data: { name: 'A' },
+  });
+  expect(res.status()).toBe(201);
+  expect(await res.json())
+    .toMatchObject({ name: 'A' });
+});
+
+// Assert a request fired
+const req = page.waitForRequest('**/track');
+await page.getByRole('button').click();
+await req;</code></pre>
+</div>
+
+<!-- ============================================================= -->
+<h2>6 · Config, parallelism &amp; CI</h2>
+<div class="grid2">
+<pre><code>// playwright.config.ts essentials
+export default defineConfig({
+  testDir: './tests',
+  fullyParallel: true,       // files + tests parallel
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 4 : undefined,
+  reporter: [['html'], ['list']],
+  use: {
+    baseURL: 'https://app.test',
+    trace: 'on-first-retry',   // debug flaky CI
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
+    testIdAttribute: 'data-qa',
+  },
+  projects: [
+    { name: 'chromium', use: devices['Desktop Chrome'] },
+    { name: 'firefox',  use: devices['Desktop Firefox'] },
+  ],
+});</code></pre>
+
+<pre><code>// Parallelism model
+// - Tests in DIFFERENT files run in parallel (workers)
+// - Tests in ONE file run serially by default
+// - fullyParallel: true =&gt; parallel within files too
+test.describe.configure({ mode: 'serial' }); // opt out
+
+// Reuse auth: run a setup project once
+// -&gt; save storageState -&gt; use in other projects
+// use: { storageState: 'auth.json' }
+
+// Tag &amp; filter
+test('checkout @smoke', ...);
+// npx playwright test --grep @smoke
+
+// Debug tooling
+// npx playwright test --ui      (time-travel UI)
+// npx playwright test --debug   (inspector)
+// npx playwright codegen URL    (record)
+// npx playwright show-trace     (trace viewer)</code></pre>
+</div>
+
+<!-- ============================================================= -->
+<h2>7 · TypeScript for QA — what gets probed</h2>
+<div class="grid2">
+<pre><code>// async/await + typing a return
+async function getUser(id: number): Promise&lt;User&gt; {
+  const r = await fetch(`/u/${id}`);
+  return r.json() as Promise&lt;User&gt;;
+}
+
+// interface vs type
+interface User { id: number; name: string; }
+type Status = 'pass' | 'fail' | 'skip'; // union
+
+// generics — reusable, type-safe helper
+function first&lt;T&gt;(arr: T[]): T | undefined {
+  return arr[0];
+}
+
+// optional / readonly / partial
+interface Opts { retries?: number; }
+function run(o: Readonly&lt;Opts&gt;) {}
+type Draft = Partial&lt;User&gt;;</code></pre>
+
+<pre><code>// Utility types worth naming
+Partial&lt;T&gt; Required&lt;T&gt; Readonly&lt;T&gt;
+Pick&lt;T,K&gt; Omit&lt;T,K&gt; Record&lt;K,V&gt;
+
+// unknown vs any
+let x: unknown;        // must narrow before use
+if (typeof x === 'string') x.toUpperCase();
+
+// ?? vs ||  and  ?.  optional chaining
+const port = cfg.port ?? 8080; // only null/undef
+const name = user?.profile?.name;
+
+// Promise.all — run in parallel, await together
+const [a, b] = await Promise.all([f(), g()]);
+
+// enum
+enum Env { Dev, Staging, Prod }</code></pre>
+</div>
+
+<!-- ============================================================= -->
+<h2>8 · Senior talking points — say these out loud</h2>
+<table>
+  <tr><th>They ask</th><th>Strong answer (compressed)</th></tr>
+  <tr><td>How do you deal with flaky tests?</td><td>Root-cause, don't retry-mask. Common causes: arbitrary sleeps → use web-first assertions; racing network → <code>waitForResponse</code>/mocking; shared state → isolate via fixtures; animations → auto-wait handles stability. Use <code>trace: 'on-first-retry'</code> to diagnose. Retries hide, they don't fix.</td></tr>
+  <tr><td>Why Playwright over Selenium/Cypress?</td><td>Auto-waiting + web-first assertions cut flakiness; real cross-browser (Chromium/Firefox/WebKit); runs out-of-process so no in-page limits (multi-tab, multi-origin, iframes); fast parallelism; built-in trace viewer, network mocking, API testing. Cypron runs in-browser (limits multi-tab/origin).</td></tr>
+  <tr><td>What makes a good test suite?</td><td>Fast, isolated (no inter-test deps), deterministic, readable (POM = intent), right level of the pyramid (mostly unit/API, fewer E2E), tests behaviour not implementation, resilient locators, runs in CI on every PR.</td></tr>
+  <tr><td>Test pyramid / strategy?</td><td>Many unit, some integration/API, few E2E. Push logic checks down to fast layers; reserve E2E for critical user journeys (login, checkout). E2E is expensive + slow — be selective.</td></tr>
+  <tr><td>Page Object Model — why?</td><td>Single source of truth for selectors/actions; tests express <em>what</em> not <em>how</em>; change UI → fix one class. Keep assertions in tests, not in POs (POs model the page, not expectations).</td></tr>
+  <tr><td>How do you test an API?</td><td>Playwright's <code>request</code> fixture or a setup project — validate status, schema/body, headers, auth, error cases. Fast, stable, great for seeding state before E2E.</td></tr>
+  <tr><td>Auth without logging in every test?</td><td>Global setup logs in once, saves <code>storageState</code> (cookies+localStorage) to a file; reuse via <code>use: { storageState }</code>. Tests start authenticated → faster + less flaky.</td></tr>
+  <tr><td>How do you keep tests maintainable at scale?</td><td>POM + fixtures for reuse, test-ids where a11y locators don't fit, tagging (@smoke/@regression), parallelism + sharding in CI, code review of tests like prod code, no hard sleeps ever.</td></tr>
+</table>
+
+<div class="box tip">
+  <div class="box-title">Live-coding survival kit</div>
+  <strong>Think out loud</strong> (they grade reasoning, not just the answer). Use your <a href="../../reference/problem-solving-method.html">UDPCT method</a>:
+  restate the task, name inputs/outputs, do a tiny trace, state the plan in plain English, <em>then</em> code.
+  Scaffold: <code>test('...', async ({ page }) =&gt; { await page.goto(); /* arrange */ /* act */ /* assert */ });</code>.
+  Reach for <code>getByRole</code> first, <code>await expect(...)</code> for every check, and narrate <em>why</em> each choice resists flakiness.
+</div>
+
+<h2 id="src">Primary source</h2>
+<p>
+  Keep the official docs open in a tab — they're excellent and the interviewer's mental model:
+  <a href="https://playwright.dev/docs/intro">playwright.dev/docs</a>
+  (start with <a href="https://playwright.dev/docs/locators">Locators</a>,
+  <a href="https://playwright.dev/docs/best-practices">Best Practices</a>, and
+  <a href="https://playwright.dev/docs/test-assertions">Assertions</a>).
+</p>
+
+<div class="ask">
+  <strong>I'm your interviewer-in-training — drill me back.</strong> Tell me to fire quiz rounds,
+  hand you timed live-coding prompts, or mock-interview you on any row of the talking-points table.
+  Say the word and we start.
+</div>
+
+<div class="lesson-footer">
+  <p class="muted">
+    Companion sheets:
+    <a href="./typescript-js-senior-cheatsheet.html">TypeScript / JS</a> ·
+    <a href="./api-http-db-senior-cheatsheet.html">API / HTTP / DB</a> ·
+    <a href="./testing-theory-senior-cheatsheet.html">Testing Theory</a> ·
+    <a href="../../reference/problem-solving-method.html">UDPCT method</a><br>
+    Interview: tomorrow afternoon. Tonight: skim §1–3 + §8. Tomorrow AM: re-skim, then do a warm-up drill.
+  </p>
+</div>
+
+</body>
+</html>
