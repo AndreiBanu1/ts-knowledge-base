@@ -265,3 +265,21 @@ const doubleCup: RequiredAlbum = {
     releaseYear: 2013,
     genre: "Juke",
 };
+
+type AlbumData = Pick<Album, "title" | "artist">;
+
+type AlbumDataWithOmit = Omit<Album, "id" | "releaseYear" | "genre">;;
+
+// Exercise 6-7: Expecting Certain Properties
+interface User67 {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+export const fetchUser = async (): Promise<Pick<User67, 'name' | 'email'>> => {
+  const response = await fetch("/api/user");
+  const user = await response.json();
+  return user;
+};
