@@ -23,8 +23,22 @@ export default function two_crystal_balls(breaks: boolean[]): number {
     i -= jumpAmount;
     for (let j = 0; j < jumpAmount && i < breaks.length; j++, i++) {
         if (breaks[i]) {
-            break
+            return i;
         }
     }
     return -1;
 }
+
+console.log(two_crystal_balls([false, false, false, true, true])) // 3 (first breaking floor)
+
+console.log(two_crystal_balls([false, false, false, false, false, true, true, true])) // 5
+
+console.log(two_crystal_balls([true, true, true, true])) // 0 (breaks from the first floor)
+
+console.log(two_crystal_balls([false, false, false, false])) // -1 (never breaks)
+
+console.log(two_crystal_balls([false])) // -1
+
+console.log(two_crystal_balls([true])) // 0
+
+console.log(two_crystal_balls([])) // -1 (empty array)
