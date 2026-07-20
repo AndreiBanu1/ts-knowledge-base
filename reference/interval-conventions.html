@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reference · Interval Conventions &amp; Off-by-One</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+
+<p class="kicker">Reference · Cheat Sheet</p>
+<h1>Interval conventions &amp; off-by-one</h1>
+<p class="lead">
+  The one rule: <strong>pick a convention, then never mix it.</strong> Every <code>+1</code>,
+  <code>&minus;1</code>, <code>&lt;</code>, <code>&lt;=</code> is forced by that choice.
+</p>
+
+<h2>Bracket notation</h2>
+<ul>
+  <li><code>[a</code> or <code>b]</code> &mdash; <strong>closed</strong>: endpoint <em>included</em>.</li>
+  <li><code>(a</code> or <code>b)</code> &mdash; <strong>open</strong>: endpoint <em>excluded</em> (stop before it).</li>
+  <li><code>[low, high)</code> = <strong>half-open</strong>: <code>low</code> in, <code>high</code> out. The common default.</li>
+</ul>
+
+<h2>The forcing table</h2>
+<table class="cmp">
+  <thead>
+    <tr><th>Decision</th><th>Half-open <code>[low, high)</code></th><th>Closed <code>[low, high]</code></th></tr>
+  </thead>
+  <tbody>
+    <tr><th><code>high</code> means</th><td>one past last index</td><td>the last valid index</td></tr>
+    <tr><th>init <code>high</code></th><td><code>arr.length</code></td><td><code>arr.length &minus; 1</code></td></tr>
+    <tr><th>loop while</th><td><code>low &lt; high</code></td><td><code>low &lt;= high</code></td></tr>
+    <tr><th>range empty when</th><td><code>low === high</code></td><td><code>low &gt; high</code></td></tr>
+    <tr><th>drop left (mid too small)</th><td><code>low = mid + 1</code></td><td><code>low = mid + 1</code></td></tr>
+    <tr><th>drop right (mid too big)</th><td><code>high = mid</code></td><td><code>high = mid &minus; 1</code></td></tr>
+  </tbody>
+</table>
+<p class="muted">
+  Only two rows differ (loop test, drop-right). <code>low = mid + 1</code> is the same in both
+  because <code>low</code> is included in both &mdash; you always skip the just-checked <code>mid</code>.
+</p>
+
+<h2>Binary search, both ways</h2>
+<pre><code>// HALF-OPEN  [low, high)
+let low = 0, high = arr.length;      // high excluded
+while (low &lt; high) {
+  const mid = low + ((high - low) &gt;&gt; 1);
+  if (arr[mid] === t) return true;
+  else if (arr[mid] &lt; t) low = mid + 1;
+  else high = mid;                   // no -1: high was excluded
+}
+return false;</code></pre>
+<pre><code>// CLOSED  [low, high]
+let low = 0, high = arr.length - 1;  // high included
+while (low &lt;= high) {
+  const mid = low + ((high - low) &gt;&gt; 1);
+  if (arr[mid] === t) return true;
+  else if (arr[mid] &lt; t) low = mid + 1;
+  else high = mid - 1;               // -1: high was a real cell
+}
+return false;</code></pre>
+
+<h2>Midpoint (independent axis)</h2>
+<table class="cmp">
+  <thead><tr><th>Form</th><th>Verdict</th></tr></thead>
+  <tbody>
+    <tr><th><code>(low + high) / 2</code></th><td>Correct in JS/TS (64-bit floats). Overflows in fixed-int languages.</td></tr>
+    <tr><th><code>low + (high &minus; low) / 2</code></th><td>Overflow-proof everywhere. Preferred habit. Reads as &ldquo;step half the gap from <code>low</code>&rdquo;.</td></tr>
+  </tbody>
+</table>
+<p class="muted">Always <code>Math.floor(...)</code> (or <code>&gt;&gt; 1</code>) &mdash; array indices must be integers.</p>
+
+<h2>Debug checklist</h2>
+<ul>
+  <li><strong>Test the 1-element array first.</strong> It fails instantly on any mixed convention.</li>
+  <li>Mixed <code>length&minus;1</code> + <code>&lt;</code> &rarr; skips the last/only element.</li>
+  <li>Mixed <code>length</code> + <code>&lt;=</code> &rarr; reads <code>arr[length]</code> = <code>undefined</code>, or infinite loop.</li>
+  <li>Infinite loop &rarr; a bound isn&rsquo;t moving. Check you did <code>+1</code>/<code>&minus;1</code> on the checked <code>mid</code>.</li>
+  <li>Off-by-one on output &rarr; ask &ldquo;did I <em>include</em> or <em>exclude</em> this endpoint?&rdquo; and make both bounds agree.</li>
+</ul>
+
+<h2>Common half-open idioms</h2>
+<pre><code>for (let i = 0; i &lt; arr.length; i++)   // [0, length) — every index once
+arr.slice(a, b)                        // [a, b)      — b excluded
+"abcde".substring(1, 3)  === "bc"      // [1, 3)      — indices 1,2
+range(a, b) → a, a+1, ..., b-1         // [a, b)      — b elements: b - a</code></pre>
+<p class="muted">
+  Half-open&rsquo;s payoff: length = <code>high &minus; low</code> with no <code>+1</code>, and adjacent
+  ranges <code>[a,b)</code> + <code>[b,c)</code> tile perfectly with no gap or overlap.
+</p>
+
+<div class="lesson-footer">
+  <p class="muted">
+    From <a href="../lessons/0002-off-by-one-intervals.html">Lesson 2 &mdash; Off-by-one is a choice, not a guess</a>.
+  </p>
+</div>
+
+</body>
+</html>

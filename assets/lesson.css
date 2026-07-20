@@ -145,6 +145,45 @@ ol.method > li strong { display: block; font-size: 1.02rem; }
 
 hr { border: none; border-top: 1px solid var(--rule); margin: 2rem 0; }
 
+/* Comparison table — two conventions/approaches side by side */
+table.cmp {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.4rem 0;
+  font-size: 0.9rem;
+}
+table.cmp th, table.cmp td {
+  border: 1px solid var(--rule);
+  padding: 0.55rem 0.7rem;
+  text-align: left;
+  vertical-align: top;
+}
+table.cmp thead th {
+  font-family: -apple-system, system-ui, sans-serif;
+  font-size: 0.78rem; letter-spacing: 0.04em;
+  background: #fbf7f7; color: var(--accent);
+}
+table.cmp tbody th {
+  font-family: -apple-system, system-ui, sans-serif;
+  font-weight: 600; font-size: 0.82rem;
+  color: var(--muted); background: #fcfbf6;
+  white-space: nowrap;
+}
+table.cmp code { background: var(--code-bg); }
+
+/* Number-line diagram for interval conventions */
+.numline {
+  font-family: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: 0.8rem; line-height: 1.5;
+  background: var(--code-bg);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 0.9rem 1.1rem;
+  margin: 1rem 0;
+  white-space: pre;
+  overflow-x: auto;
+}
+
 @media print {
   body { max-width: none; padding: 0; font-size: 11pt; }
   .reveal[open] summary, .reveal summary { border: none; background: none; color: var(--ink); }

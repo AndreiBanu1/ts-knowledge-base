@@ -31,3 +31,12 @@
 
 ## Open threads
 - Next: keep going cold on unfamiliar problems (his idea to bring NeetCode problems works well).
+
+- Lesson 2 (interval conventions / off-by-one) delivered on his own binary-search.ts. Core
+  frame taught: the +1/-1/</<= are FORCED by one choice (half-open [low,high) vs closed
+  [low,high]); mixing conventions is the bug; 1-element array is the fastest tell. Midpoint
+  (low+high)/2 vs low+(high-low)/2 is a separate axis (overflow) and both are correct in JS.
+  Ties to his known soft spot (0002): he patches with +1/offset instead of trusting the
+  convention. Exercise set: lowerBound(arr,target) — must DECLARE convention in a comment
+  first, then hand-trace before coding. Awaiting his submission to review convention-consistency.
+- New reusable reference: reference/interval-conventions.html (forcing table + debug checklist).
