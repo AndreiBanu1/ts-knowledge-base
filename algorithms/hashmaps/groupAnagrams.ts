@@ -36,4 +36,22 @@ function groupAnagrams(strs: string[]): string[][] {
   return Object.values(hash)
 }
 
+function group2Anagrams(strs: string[]): string[][] {
+  // 1. make an empty map: key = string, value = string[]
+  const map = new Map<string, string[]>()
+  // 2. for each word:
+  //    - compute the key (sort its letters into a string)
+  //    - if the key isn't in the map, create an empty array for it
+  //    - push the word into that key's array
+  for (const str of strs) {
+    const key = str.split('').sort().join('')
+    if (!map.has(key)) {
+      map.set(key, [])
+    }
+    map.get(key)!.push(str)
+  }
+  // 3. return all the values of the map
+  return [...map.values()]
+}
+
 // #5: Test

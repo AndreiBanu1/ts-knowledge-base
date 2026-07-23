@@ -15,49 +15,89 @@
  *      - Search: O(n)
  */
 
+type QueueNode<T> = {
+  value: T
+  next?: QueueNode<T>
+}
+
 class Queue<T> {
-    private items: T[] = [];
+  private head?: QueueNode<T>
+  private tail?: QueueNode<T>
+  private length: number
 
-    // Add an element to the end of the queue
-    enqueue(element: T): void {
-        this.items.push(element);
+  constructor() {
+    this.head = this.tail = undefined
+    this.length = 0
+  }
+
+  // Add element at the end
+  // O(1)
+  enqueue(item: T): void {
+    const node = {value: item} as QueueNode<T>;
+    this.length++;
+
+    if (!this.tail) {
+      this.tail = this.head = node;
+      return;
     }
 
-    // Remove an element from the front of the queue
-    dequeue(): T | undefined {
-        return this.items.shift();
+    
+    this.tail.next = node;
+    this.tail = node;
+  }
+
+  // Remove element from front - O(1)
+  dequeue(): T | undefined {
+    if (!this.head) {
+      return undefined
     }
 
-    // View the front element without removing it
-    peek(): T | undefined {
-        return this.items[0];
+    this.length--;
+
+    const head = this.head
+    this.head = this.head.next
+
+    head.next = undefined
+
+    return head.value
+  }
+
+  // View first element - O(1)
+  peek(): T | undefined {
+    return this.head?.value
+  }
+
+  isEmpty(): boolean {
+    return this.length === 0
+  }
+
+  size(): number {
+    return this.length
+  }
+
+  print(): void {
+    const values: T[] = []
+
+    let current = this.head
+
+    while (current) {
+      values.push(current.value)
+      current = current.next
     }
 
-    // Check if the queue is empty
-    isEmpty(): boolean {
-        return this.items.length === 0;
-    }
-
-    // Get the size of the queue
-    size(): number {
-        return this.items.length;
-    }
-
-    // Print the queue
-    print(): void {
-        console.log(this.items.join(" <- "));
-    }
+    console.log(values.join(' <- '))
+  }
 }
 
 // Example usage
-const queue = new Queue<number>();
-queue.enqueue(10);
-queue.enqueue(20);
-queue.enqueue(30);
+const queue = new Queue<number>()
+queue.enqueue(10)
+queue.enqueue(20)
+queue.enqueue(30)
 
-queue.print(); // 10 <- 20 <- 30
-console.log(queue.dequeue()); // 10
-console.log(queue.peek());    // 20
-queue.print(); // 20 <- 30
-console.log(queue.size());    // 2
-console.log(queue.isEmpty()); // false
+queue.print() // 10 <- 20 <- 30
+console.log(queue.dequeue()) // 10
+console.log(queue.peek()) // 20
+queue.print() // 20 <- 30
+console.log(queue.size()) // 2
+console.log(queue.isEmpty()) // false
