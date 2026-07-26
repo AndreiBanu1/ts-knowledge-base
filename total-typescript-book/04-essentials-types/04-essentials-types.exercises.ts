@@ -1,16 +1,25 @@
 import type {Expect, Equal} from '../helpers'
 
-// Exercise 1
+// 1) Parameter and return type annotations
+/**
+ * Parameters must be annotated (they are `any`/implicit-any otherwise); the return type is optional and acts as a contract check.
+ */
 export const add = (a: number, b: number): number => {
     return a + b
 }
 
-// Exercise 2
+// 2) Inferred return types
+/**
+ * With no return annotation, TypeScript infers it from the body — here `string`, because `join` returns a string.
+ */
 export const concatTwoStrings = (a: string, b: string) => {
     return [a, b].join(' ')
 }
 
-// Exercise 4
+// 3) Object types via a type alias
+/**
+ * A `type` alias names an object shape once so many functions can reuse it instead of repeating an inline annotation.
+ */
 export type Rectangle = {
     width: number;
     height: number;
@@ -22,6 +31,10 @@ export const getRectanglePerimeter = (rectangle: Rectangle) => {
     return 2 * (rectangle.width + rectangle.height);
 };
 
+// 4) Nested object types and arrays of objects
+/**
+ * Object types nest freely: `items` is an array of inline object types, so `for...of` gives fully typed items.
+ */
 type ShoppingCart = {
     userId: string;
     items: { itemName: string, quantity: number, price: number }[];
@@ -45,6 +58,10 @@ processCart({
     ],
 });
 
+// 5) Extracting a nested type into an interface
+/**
+ * Pulling the repeated shape out into `Ingredient` keeps `Recipe` readable and makes the inner type reusable.
+ */
 interface Ingredient {
     name: string;
     quantity: string;
@@ -71,6 +88,10 @@ processRecipe({
     instructions: ". . .",
 });
 
+// 6) Tuples with named members
+/**
+ * A tuple fixes the length and the type at each index; the labels (`x:`, `y:`) are documentation only, not real keys.
+ */
 const setRange = (range: [x: number, y: number]) => {
     const x = range[0];
     const y = range[1];
@@ -84,6 +105,10 @@ const setRange = (range: [x: number, y: number]) => {
     ];
 };
 
+// 7) Optional tuple members
+/**
+ * A trailing `?` member may be missing, so reading that index yields `number | undefined`.
+ */
 const goToLocation = (coordinates: [latitude: number, longitude: number, elevation?: number]) => {
     const latitude = coordinates[0];
     const longitude = coordinates[1];
@@ -98,6 +123,10 @@ const goToLocation = (coordinates: [latitude: number, longitude: number, elevati
     ];
 };
 
+// 8) Optional object properties + passing type arguments
+/**
+ * `id?` makes the property omittable, and `new Map<number, User>()` passes type arguments explicitly so `set` is checked.
+ */
 type User = {
     id?: string;
     name: string;
@@ -114,11 +143,19 @@ function setSomeUserMaps() {
     userMap.set(3, "123");
 }
 
+// 9) Typing an `any` return value
+/**
+ * `JSON.parse` returns `any`, so annotating the variable is what restores type safety downstream.
+ */
 export const parsedData: {
     name: string;
     age: number;
 } = JSON.parse('{"name": "Alice", "age": 30}');
 
+// 10) Rest parameters
+/**
+ * `...formats: string[]` collects any number of trailing arguments into a typed array.
+ */
 type Album = {
     title: string;
     artist: string;
@@ -136,6 +173,10 @@ getAlbumFormats({
     year: 2015
 }, "CD", "LP", "Cassette");
 
+// 11) Function types as parameters (contextual inference)
+/**
+ * Typing a parameter as a function signature lets the callback's own parameters be inferred at the call site.
+ */
 // type Mapper = (item: string) => number;
 const mapOverObjects = (items: string[], map: (item: string) => number) => {
     return items.map(map);
@@ -144,10 +185,18 @@ const arrayOfNumbers = mapOverObjects(['1', '2', '3'], (item) => {
     return parseInt(item) * 100;
 });
 
+// 12) Function type aliases
+/**
+ * Function signatures can be named and reused, including optional and rest parameter forms.
+ */
 type WithOptional = (index?: number) => number;
 type WithRest = (...rest: string[]) => number;
 type WithMultiple = (first: string, second: string) => number;
 
+// 13) Optional parameters
+/**
+ * `last?: string` is really `string | undefined`, so it must be narrowed before use.
+ */
 // Async
 export const concatName = (first: string, last?: string) => {
     if (!last) {
@@ -157,6 +206,10 @@ export const concatName = (first: string, last?: string) => {
     return `${first} ${last}`;
 }
 
+// 14) Callbacks that transform a value
+/**
+ * `makeChange: (user: User) => User` documents both what the callback receives and what it must give back.
+ */
 const modifyUser = (user: User[], id: string, makeChange: (user: User) => User) => {
     return user.map((u) => {
         if (u.id === id) {
@@ -174,6 +227,10 @@ modifyUser(users, "1", (user) => {
     return { ...user, name: "Waqas" };
 });
 
+// 15) The `void` return type
+/**
+ * `() => void` means "return value ignored" — a callback may still return something, it just won't be used.
+ */
 const addClickEventListener = (listener: () => void) => {
     if (typeof document !== "undefined") {
         document.addEventListener("click", listener);
@@ -183,6 +240,10 @@ addClickEventListener(() => {
     console.log("Clicked!");
 });
 
+// 16) Async functions and Promise<T>
+/**
+ * An `async` function always returns a Promise, so the annotation wraps the resolved type; `await` unwraps it back.
+ */
 async function fetchData(): Promise<number> {
     const response = await fetch("https://api.example.com/data");
     const data: number = await response.json();

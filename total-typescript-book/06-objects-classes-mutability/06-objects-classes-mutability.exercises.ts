@@ -1,3 +1,7 @@
+// 1) Intersection types
+/**
+ * `A & B` produces a type that must satisfy both shapes at once — every property of both is required.
+ */
 // Intersection types
 export type Album = {
   title: string
@@ -21,6 +25,10 @@ export const wishYouWereHereSales: AlbumSales = {
   revenue: 65000000,
 }
 
+// 2) Intersecting incompatible properties gives never
+/**
+ * `number & string` is impossible, so the property becomes `never` and no value can ever satisfy the type.
+ */
 // Combining incompatible types results in never
 type User1 = {
   age: number
@@ -32,6 +40,10 @@ type User2 = {
 
 type User3 = User1 & User2 // never
 
+// 3) Interfaces extending interfaces
+/**
+ * `extends` copies the base members into the child, expressing "is a" hierarchies instead of an ad-hoc merge.
+ */
 // Interfaces have the ability to extend other types
 export interface Albom {
   title: string
@@ -65,10 +77,18 @@ export const oneFromTheVault: LiveAlbum = {
   concertDate: new Date('1975-08-13'),
 }
 
+// 4) Extending multiple interfaces
+/**
+ * One interface can extend several parents at once, combining all their members.
+ */
 export interface BonusConcertEdition extends StudioAlbum, LiveAlbum {
   numberOfDiscs: number
 }
 
+// 5) Intersection vs. extends — prefer extends
+/**
+ * `extends` errors at the point of conflict and is cached by name; intersections are recomputed and report worse errors.
+ */
 /**
  * Intersections vs. interface extends -> choose interface
  * Better Errors When Merging Incompatible Types
@@ -77,6 +97,10 @@ export interface BonusConcertEdition extends StudioAlbum, LiveAlbum {
  * intersections are slow because they are recomputed everytime
  */
 
+// 6) Factoring shared fields into a base type
+/**
+ * Common properties live in one `BaseEntity` and each concrete type intersects with it — no duplication.
+ */
 // Exercise 6-1: Creating an Intersection Type
 export type User = {
   name: string
@@ -100,6 +124,10 @@ export const product: Product = {
   price: 2314,
 }
 
+// 7) The same factoring with interfaces
+/**
+ * Identical result to the intersection version, written the preferred way.
+ */
 // Exercise 6-2: Extending Interfaces
 export interface IBaseEntity {
   id: string
@@ -116,6 +144,10 @@ export interface IUser extends IBaseEntity {
   email: string
 }
 
+// 8) Index signatures
+/**
+ * `[index: string]: boolean` allows any string key, which is what makes keys addable after the object is created.
+ */
 // Object keys can not be added dynamically, if you don't declare index signature
 const albumAwards: {
   [index: string]: boolean
@@ -129,6 +161,10 @@ interface AlbumAwards {
   [index: string]: boolean
 }
 
+// 9) Record as shorthand
+/**
+ * `Record<K, V>` is the terser form: a string key gives open-ended keys, a literal union gives an exact required set.
+ */
 // Record type supports dynamic keys
 const albumRewards: Record<string, boolean> = {}
 albumRewards.Grammy = true
@@ -139,6 +175,10 @@ const albumAwards2: Record<'Grammy' | 'MercuryPrize' | 'Billboard', boolean> = {
   Billboard: true,
 }
 
+// 10) Required keys plus dynamic keys
+/**
+ * Intersecting a `Record` of known keys with an index signature demands the known keys while still permitting extras.
+ */
 type BaseAwards = 'Grammy' | 'MercuryPrize' | 'Billboard'
 
 type ExtendedAlbumAwards = Record<BaseAwards, boolean> & {
@@ -162,11 +202,19 @@ interface IExtendedAlbumAwards extends IBaseAwards {
   [award: string]: boolean
 }
 
+// 11) PropertyKey
+/**
+ * `PropertyKey` is the built-in `string | number | symbol` — every type JavaScript accepts as a key.
+ */
 // The Property Key Type
 type AlbumPK = {
   [key: PropertyKey]: string
 }
 
+// 12) Four ways to write dynamic keys
+/**
+ * Type alias, interface, inline annotation and `Record` are interchangeable here; `Record` is the shortest.
+ */
 // Exercise 6-3: Using an Index Signature for Dynamic Keys
 
 // method I:
@@ -191,6 +239,10 @@ scores.math = 95
 scores.english = 90
 scores.science = 85
 
+// 13) Index signature alongside declared properties
+/**
+ * Listing keys explicitly next to the index signature makes those keys mandatory while other keys stay optional.
+ */
 // Exercise 6-4: Default Properties with Dynamic Keys
 interface Scores {
   [subject: string]: number
@@ -210,6 +262,10 @@ scores.athletics = 100
 scores.french = 75
 scores.spanish = 70
 
+// 14) Restricting keys with Record
+/**
+ * A literal union as the key type closes the object: every member is required and unknown keys are rejected.
+ */
 // Exercise 6-5: Restricting Object Keys with Records
 export type Environment = 'development' | 'production' | 'staging'
 
@@ -241,11 +297,19 @@ export const configurations: Configurations = {
   },
 }
 
+// 15) Accepting any key with PropertyKey
+/**
+ * Typing the parameter as `PropertyKey` lets the helper take strings, numbers or symbols, as `hasOwnProperty` does.
+ */
 // Exercise 6-6: Dynamic Key Support
 export const hasKey = (obj: object, key: PropertyKey) => {
   return obj.hasOwnProperty(key)
 }
 
+// 16) Partial and Required
+/**
+ * `Partial<T>` makes every property optional (ideal for updates); `Required<T>` strips every `?` back off.
+ */
 // The Partial Type: create a new object type from an existing one, except all of its properties are optional.
 type PartialAlbum = Partial<Album>
 
@@ -265,10 +329,18 @@ const doubleCup: RequiredAlbum = {
   genre: 'Juke',
 }
 
+// 17) Pick and Omit
+/**
+ * `Pick` keeps the keys you name, `Omit` drops them — same idea from opposite directions.
+ */
 type AlbumData = Pick<Album, 'title' | 'artist'>
 
 type AlbumDataWithOmit = Omit<Album, 'id' | 'releaseYear' | 'genre'>
 
+// 18) Pick as a return type
+/**
+ * Deriving the return type with `Pick` keeps it tied to the source interface instead of hand-copying fields.
+ */
 // Exercise 6-7: Expecting Certain Properties
 interface User67 {
   id: string
@@ -283,6 +355,10 @@ export const fetchUser = async (): Promise<Pick<User67, 'name' | 'email'>> => {
   return user
 }
 
+// 19) Composing utility types
+/**
+ * `Partial<Omit<T, 'id'>>` reads inside-out: remove `id`, then make what remains optional — a patch payload.
+ */
 //Exercise 6-8: Updating a Product
 interface Product68 {
   id: number

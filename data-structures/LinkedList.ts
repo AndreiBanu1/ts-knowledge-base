@@ -78,22 +78,6 @@ class LinkedList<T> {
     }
   }
 
-  get(index: number): ListNode<T> | null {
-    let current = this.head
-    let i = 0
-
-    while (current) {
-      if (i === index) {
-        return current
-      }
-
-      current = current.next
-      i++
-    }
-
-    return null
-  }
-
   // Find a node - O(n)
   find(value: T): ListNode<T> | null {
     let current = this.head
