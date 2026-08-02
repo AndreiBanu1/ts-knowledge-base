@@ -189,3 +189,28 @@ const shelfLocations2 = {
  */
 
 // Exercise 7-4: Inferring Literal Values in Arrays
+type ButtonAttributes2 = {
+  type: 'button' | 'submit' | 'reset'
+}
+
+const modifyButtons2 = (attributes: ButtonAttributes2[]) => {}
+
+const buttonsToChange2 = [
+  {
+    type: 'button',
+  } as const,
+  {
+    type: 'submit',
+  } as const,
+]
+
+modifyButtons2(buttonsToChange2)
+
+buttonsToChange2.push({
+  type: 'button',
+})
+
+/**
+ * When you declare variables with let, TypeScript infers wider types because the values might be reassigned later.
+ * Using const creates more precise literal types since the variable can’t be changed.
+ */

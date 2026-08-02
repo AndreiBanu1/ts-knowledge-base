@@ -61,7 +61,7 @@ class LinkedList<T> {
 
   // Delete first occurrence of value - O(n)
   delete(value: T): void {
-    if (!this.head) return
+    if (!this.head) return  
 
     if (this.head.value === value) {
       this.head = this.head.next

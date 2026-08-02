@@ -15,49 +15,80 @@
  *      - Search: O(n)
  */
 
+class StackNode<T> {
+  value: T
+  prev: StackNode<T> | null
+
+  constructor(value: T) {
+    this.value = value
+    this.prev = null
+  }
+}
 class Stack<T> {
-    private items: T[] = [];
+  private length: number
+  private head: StackNode<T> | null
 
-    // Add an element to the top of the stack
-    push(element: T): void {
-        this.items.push(element);
+  constructor() {
+    this.head = null
+    this.length = 0
+  }
+
+  // Add an element to the top of the stack
+  push(element: T): void {
+    const node = new StackNode(element)
+    this.length++
+
+    if (!this.head) {
+      this.head = node
+      return
     }
 
-    // Remove an element from the top of the stack
-    pop(): T | undefined {
-        return this.items.pop();
+    node.prev = this.head
+    this.head = node
+  }
+
+  // Remove an element from the top of the stack
+  pop(): T | undefined {
+    if (!this.head) {
+      return undefined
     }
 
-    // View the top element without removing it
-    peek(): T | undefined {
-        return this.items[this.items.length - 1];
-    }
+    this.length--
 
-    // Check if the stack is empty
-    isEmpty(): boolean {
-        return this.items.length === 0;
-    }
+    const head = this.head
+    this.head = head.prev
 
-    // Get the size of the stack
-    size(): number {
-        return this.items.length;
-    }
+    return head.value
+  }
 
-    // Print the stack
-    print(): void {
-        console.log(this.items.join(" -> "));
-    }
+  // View the top element without removing it
+  peek(): T | undefined {
+    return this.head?.value
+  }
+
+  // Check if the stack is empty
+  isEmpty(): boolean {
+    return this.length === 0;
+  }
+
+  // Get the size of the stack
+  size(): number {
+    return this.length
+  }
+
+  // Print the stack
+  print(): void {}
 }
 
 // Example usage
-const stack = new Stack<number>();
-stack.push(10);
-stack.push(20);
-stack.push(30);
+const stack = new Stack<number>()
+stack.push(10)
+stack.push(20)
+stack.push(30)
 
-stack.print(); // 10 -> 20 -> 30
-console.log(stack.pop());  // 30
-console.log(stack.peek()); // 20
-stack.print(); // 10 -> 20
-console.log(stack.size());    // 2
-console.log(stack.isEmpty()); // false
+stack.print() // 10 -> 20 -> 30
+console.log(stack.pop()) // 30
+console.log(stack.peek()) // 20
+stack.print() // 10 -> 20
+console.log(stack.size()) // 2
+console.log(stack.isEmpty()) // false
