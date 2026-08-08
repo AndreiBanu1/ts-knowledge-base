@@ -15,5 +15,5 @@
     "types": ["vitest/globals"]
   },
   "include": ["**/*.ts"],
-  "exclude": ["node_modules", "algorithms", "performance", "scratch", "design-patterns"]
+  "exclude": ["node_modules", "algorithms", "performance", "miscellaneous", "design-patterns"]
 }

@@ -109,9 +109,7 @@ class LinkedList<T> {
 
     while (current) {
       const next = current.next
-
       current.next = previous
-
       previous = current
       current = next
     }
