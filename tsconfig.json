@@ -9,10 +9,11 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
+    "moduleDetection": "force",
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "noEmit": true,
-    "types": ["vitest/globals"]
+    "types": ["vitest/globals"],
   },
   "include": ["**/*.ts"],
   "exclude": ["node_modules", "algorithms", "performance", "miscellaneous", "design-patterns"]

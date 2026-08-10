@@ -200,3 +200,32 @@ class CanvasNode4 {
     this.#y = pos.y
   }
 }
+
+// Exercise 8-5: Extending a Class
+type ViewMode = 'hidden' | 'visible' | 'selected'
+
+class Shape {
+  #x: number
+  #y: number
+
+  constructor(options?: { x: number; y: number }) {
+    this.#x = options?.x ?? 0
+    this.#y = options?.y ?? 0
+  }
+
+  // Position getter and setter methods
+
+  move(x: number, y: number) {
+    this.#x = x
+    this.#y = y
+  }
+}
+
+class CanvasNode5 extends Shape {
+  #viewMode: ViewMode
+
+  constructor(options?: { x: number; y: number; viewMode?: ViewMode }) {
+    super(options)
+    this.#viewMode = options?.viewMode ?? 'visible'
+  }
+}
