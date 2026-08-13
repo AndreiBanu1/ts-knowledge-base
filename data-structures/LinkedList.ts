@@ -61,7 +61,7 @@ class LinkedList<T> {
 
   // Delete first occurrence of value - O(n)
   delete(value: T): void {
-    if (!this.head) return  
+    if (!this.head) return
 
     if (this.head.value === value) {
       this.head = this.head.next
@@ -186,5 +186,45 @@ class DoublyLinkedList<T> {
     this.tail!.next = newNode
     newNode.prev = this.tail
     this.tail = newNode
+  }
+
+  getAt(idx: number): DoublyNode<T> | null {
+    let curr = this.head
+    for (let i = 0; curr && i < idx; i++) {
+      curr = curr.next
+    }
+    return curr
+  }
+
+  removeAt(idx: number): T | null {
+    const node = this.getAt(idx)
+
+    if (!node) {
+      return null
+    }
+    return this.removeNode(node)
+  }
+
+  removeNode(node: DoublyNode<T>): T {
+    const value = node.value
+
+    if (node.prev) {
+      node.prev.next = node.next
+    } else {
+      // node is head
+      this.head = node.next
+    }
+
+    if (node.next) {
+      node.next.prev = node.prev
+    } else {
+      // node is tail
+      this.tail = node.prev
+    }
+
+    node.prev = null
+    node.next = null
+
+    return value
   }
 }

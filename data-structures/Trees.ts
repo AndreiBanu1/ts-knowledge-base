@@ -1,108 +1,182 @@
 /**
- * 🔹 Binary Tree (TypeScript Implementation)
+ * 🔹 Tree (TypeScript Implementation)
  *
  * Definition:
- *  - A tree is a hierarchical data structure consisting of nodes, with a root node and child nodes.
- *  - A Binary Tree is a tree where each node has at most two children: left and right.
+ *  - A tree is a hierarchical data structure consisting of nodes.
+ *  - The topmost node is called the root.
+ *  - A node can have zero or more children.
+ *
+ * Binary Tree:
+ *  - Each node has at most two children: left and right.
+ *
+ * Binary Search Tree (BST):
+ *  - A binary tree where:
+ *      - values smaller than the current node go to the left
+ *      - values greater than or equal to the current node go to the right
  *
  * Characteristics:
- *  - Root node: topmost node.
- *  - Leaf nodes: nodes with no children.
- *  - Height: longest path from root to a leaf.
- *  - Used in searching, sorting, expression parsing, and hierarchical data.
- *  - Time Complexity:
- *      - Insertion: O(log n) on balanced tree, O(n) worst case
- *      - Search: O(log n) on balanced tree, O(n) worst case
- *      - Deletion: O(log n) on balanced tree, O(n) worst case
+ *  - Root: topmost node.
+ *  - Leaf: node with no children.
+ *  - Height: longest path from the root to a leaf.
+ *  - Branching factor: maximum number of children a node can have.
+ *  - Balanced tree: left and right subtrees have similar heights.
+ *
+ * Traversals:
+ *  - Pre-order:  Root -> Left -> Right
+ *  - In-order:   Left -> Root -> Right
+ *  - Post-order: Left -> Right -> Root
+ *
+ * Time Complexity for a BST:
+ *  - Search:   O(log n) average/balanced, O(n) worst case
+ *  - Insert:   O(log n) average/balanced, O(n) worst case
+ *  - Delete:   O(log n) average/balanced, O(n) worst case
  */
 
-class TreeNode<T> {
-    value: T;
-    left: TreeNode<T> | null = null;
-    right: TreeNode<T> | null = null;
+export class TreeNode<T> {
+  value: T
+  left: TreeNode<T> | null = null
+  right: TreeNode<T> | null = null
 
-    constructor(value: T) {
-        this.value = value;
-    }
+  constructor(value: T) {
+    this.value = value
+  }
 }
 
-class BinaryTree<T> {
-    root: TreeNode<T> | null = null;
+class Tree<T> {
+  root: TreeNode<T> | null = null
 
-    // Insert value in a simple Binary Search Tree manner
-    insert(value: T): void {
-        const newNode = new TreeNode(value);
-        if (this.root === null) {
-            this.root = newNode;
-        } else {
-            this.insertNode(this.root, newNode);
-        }
+  // Insert value using Binary Search Tree rules
+  insert(value: T): void {
+    const newNode = new TreeNode(value)
+
+    if (this.root === null) {
+      this.root = newNode
+      return
     }
 
-    private insertNode(node: TreeNode<T>, newNode: TreeNode<T>): void {
-        if (newNode.value < node.value) {
-            if (node.left === null) node.left = newNode;
-            else this.insertNode(node.left, newNode);
-        } else {
-            if (node.right === null) node.right = newNode;
-            else this.insertNode(node.right, newNode);
-        }
+    this.insertNode(this.root, newNode)
+  }
+
+  private insertNode(node: TreeNode<T>, newNode: TreeNode<T>): void {
+    if (newNode.value < node.value) {
+      if (node.left === null) {
+        node.left = newNode
+      } else {
+        this.insertNode(node.left, newNode)
+      }
+    } else {
+      if (node.right === null) {
+        node.right = newNode
+      } else {
+        this.insertNode(node.right, newNode)
+      }
+    }
+  }
+
+  // Pre-order: Root -> Left -> Right
+  preorderTraversal(): T[] {
+    const path: T[] = []
+
+    this.walkPreorder(this.root, path)
+
+    return path
+  }
+
+  private walkPreorder(curr: TreeNode<T> | null, path: T[]): void {
+    if (!curr) return
+
+    // PRE
+    path.push(curr.value)
+
+    this.walkPreorder(curr.left, path)
+    this.walkPreorder(curr.right, path)
+  }
+
+  // In-order: Left -> Root -> Right
+  inorderTraversal(): T[] {
+    const path: T[] = []
+
+    this.walkInorder(this.root, path)
+
+    return path
+  }
+
+  private walkInorder(curr: TreeNode<T> | null, path: T[]): void {
+    if (!curr) return
+
+    // LEFT
+    this.walkInorder(curr.left, path)
+
+    // ROOT
+    path.push(curr.value)
+
+    // RIGHT
+    this.walkInorder(curr.right, path)
+  }
+
+  // Post-order: Left -> Right -> Root
+  postorderTraversal(): T[] {
+    const path: T[] = []
+
+    this.walkPostorder(this.root, path)
+
+    return path
+  }
+
+  private walkPostorder(curr: TreeNode<T> | null, path: T[]): void {
+    if (!curr) return
+
+    // LEFT
+    this.walkPostorder(curr.left, path)
+
+    // RIGHT
+    this.walkPostorder(curr.right, path)
+
+    // POST
+    path.push(curr.value)
+  }
+
+  // Search for a value
+  search(node: TreeNode<T> | null, value: T): boolean {
+    if (node === null) {
+      return false
     }
 
-    // In-order traversal: left -> root -> right
-    inorderTraversal(node: TreeNode<T> | null = this.root): void {
-        if (node !== null) {
-            this.inorderTraversal(node.left);
-            console.log(node.value);
-            this.inorderTraversal(node.right);
-        }
+    if (node.value === value) {
+      return true
     }
 
-    // Pre-order traversal: root -> left -> right
-    preorderTraversal(node: TreeNode<T> | null = this.root): void {
-        if (node !== null) {
-            console.log(node.value);
-            this.preorderTraversal(node.left);
-            this.preorderTraversal(node.right);
-        }
+    if (value < node.value) {
+      return this.search(node.left, value)
     }
 
-    // Post-order traversal: left -> right -> root
-    postorderTraversal(node: TreeNode<T> | null = this.root): void {
-        if (node !== null) {
-            this.postorderTraversal(node.left);
-            this.postorderTraversal(node.right);
-            console.log(node.value);
-        }
-    }
-
-    // Search for a value
-    search(node: TreeNode<T> | null, value: T): boolean {
-        if (node === null) return false;
-        if (node.value === value) return true;
-        if (value < node.value) return this.search(node.left, value);
-        else return this.search(node.right, value);
-    }
+    return this.search(node.right, value)
+  }
 }
 
 // Example usage
-const tree = new BinaryTree<number>();
-tree.insert(50);
-tree.insert(30);
-tree.insert(70);
-tree.insert(20);
-tree.insert(40);
-tree.insert(60);
-tree.insert(80);
 
-console.log("In-order Traversal:");
-tree.inorderTraversal();
+const tree = new Tree<number>()
 
-console.log("Pre-order Traversal:");
-tree.preorderTraversal();
+tree.insert(50)
+tree.insert(30)
+tree.insert(70)
+tree.insert(20)
+tree.insert(40)
+tree.insert(60)
+tree.insert(80)
 
-console.log("Post-order Traversal:");
-tree.postorderTraversal();
+console.log('In-order:', tree.inorderTraversal())
+// [20, 30, 40, 50, 60, 70, 80]
 
-console.log("Search 40:", tree.search(tree.root, 40)); // true
-console.log("Search 90:", tree.search(tree.root, 90)); // false
+console.log('Pre-order:', tree.preorderTraversal())
+// [50, 30, 20, 40, 70, 60, 80]
+
+console.log('Post-order:', tree.postorderTraversal())
+// [20, 40, 30, 60, 80, 70, 50]
+
+console.log('Search 40:', tree.search(tree.root, 40))
+// true
+
+console.log('Search 90:', tree.search(tree.root, 90))
+// false
